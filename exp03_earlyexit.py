@@ -32,7 +32,7 @@ def settling_from_traces(tr):
     return tr.shape[1] - conv.sum(1)
 
 
-def early_exit_solve(solver, puzzle, z0, cap=24, chunk=8, batch=4096):
+def early_exit_solve(solver, puzzle, z0, cap=24, chunk=8, batch=512):
     """Chunked solving with latent-carry continuation + early exit.
 
     Verified exactly equivalent to a continuous cap-loop run (exp03: settling
