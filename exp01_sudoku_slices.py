@@ -13,7 +13,7 @@ Protocol (Fractal basins trap latent reasoning, Lai et al. 2026, App. B):
 Output: runs/exp01/<puzzle_id>/slice_seed<k>.npz  (settling field + traces summary)
         runs/exp01/summary.json
 """
-import json, sys, time
+import json, os, sys, time
 from pathlib import Path
 
 import numpy as np
@@ -121,16 +121,30 @@ def main():
                 continue
             t0 = time.time()
             u, v = plane((97, 512), seed)
-            def f(p):
-                z = p[:, 0, None, None] * u + p[:, 1, None, None] * v
-                r = solver.solve_batch(puzzle, z_H=z, z_L=z * 0, max_steps=MAX_STEPS,
-                                       noise_scale=0.0, return_intermediates=True)
-                return to_traces(r)
-            traces = batched_apply(f, mesh(RES), batch_size=200, pad_dim=1)
-            times = settling_times(traces).reshape(RES, RES).astype(np.int16)
+            z_all = mesh(RES)
+            z_all = z_all[:, 0, None, None] * u + z_all[:, 1, None, None] * v
+            if os.environ.get("FB_NO_EARLYEXIT"):
+                def f(p):
+                    r = solver.solve_batch(puzzle, z_H=p, z_L=p * 0, max_steps=MAX_STEPS,
+                                           noise_scale=0.0, return_intermediates=True)
+                    return to_traces(r)
+                traces = batched_apply(f, z_all, batch_size=200, pad_dim=1)
+                times = settling_times(traces).reshape(RES, RES).astype(np.int16)
+                finals_np = traces[:, -1].numpy()
+            else:
+                from exp03_earlyexit import early_exit_solve
+                times_1d, finals_np = early_exit_solve(solver, puzzle, z_all, cap=MAX_STEPS)
+                times = times_1d.reshape(RES, RES)
 
-            solved = int((traces[:, -1] == torch.tensor(grid, dtype=torch.int8)).all(-1).all(-1).sum())
-            frac_solved = solved / RES**2
+            solved = int((finals_np == grid).all(-1).all(-1).sum())
+            frac_true_solved = solved / RES**2
+            # paper's exclusion rule: <90% of conditions reach "the model's
+            # final solution" — i.e. self-consistency (no multistability),
+            # NOT the ground-truth puzzle solution.
+            vals, counts = np.unique(finals_np.reshape(RES**2, -1), axis=0,
+                                     return_counts=True)
+            frac_consensus = counts.max() / RES**2
+            frac_solved = frac_consensus
             frac_capped = float((times == MAX_STEPS).mean())
             be = basin_entropy(times, box_size=5)
             ue = uncertainty_exponent(times, box_size=5)
@@ -141,7 +155,9 @@ def main():
                        basin_entropy=be["basin_entropy"],
                        boundary_entropy=be.get("boundary_basin_entropy"),
                        alpha=ue["uncertainty_exponent"],
-                       frac_solved=frac_solved, frac_capped=frac_capped,
+                       frac_consensus=frac_consensus,
+                       frac_true_solved=frac_true_solved,
+                       frac_capped=frac_capped,
                        valid_slice=bool(valid), backtracking_guesses=diff,
                        givens=int((grid > 0).sum()), seconds=round(time.time() - t0, 1))
             print(json.dumps(rec), flush=True)
