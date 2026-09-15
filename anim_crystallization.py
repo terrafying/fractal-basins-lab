@@ -25,13 +25,17 @@ CMAP = LinearSegmentedColormap.from_list(
     "err", [VOID, "#10143a", "#33207a", "#7a3fe0", "#e05fd8", "#ffd9f5"])
 
 
-def render(traces, title, out_mp4, fps=6):
+def render(traces, title, out_mp4, fps=2, gamma=0.5):
     final = traces[:, -1]                                   # (B, 9, 9)
-    err = (traces != final[:, None]).mean(-1).mean(-1)      # (B, steps) in [0,1]
+    conv = (traces == final[:, None]).all(-1).all(-1)       # (B, steps) settled?
     RES = int(np.sqrt(traces.shape[0]))
-    fields = err.reshape(-1, RES, RES)                      # (steps, RES, RES)
+    # field per loop: 1 where the trajectory has NOT yet settled on its final
+    # grid ("unsettled"); the basin geometry locks in as this cools to zero.
+    fields = (1.0 - conv.astype(float)).T                   # (steps, B)
+    fields = fields.reshape(-1, RES, RES)
     from scipy.ndimage import gaussian_filter
     fields = gaussian_filter(fields, sigma=(0, 2, 2))       # smooth per frame
+    fields = fields ** gamma                                # lift dim structure
     vmax = float(np.percentile(fields, 99))                 # outlier-robust scale
 
     tmp = Path(tempfile.mkdtemp())
@@ -43,20 +47,27 @@ def render(traces, title, out_mp4, fps=6):
         ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values():
             s.set_color("#1c2430")
-        ax.set_title(f"{title}   loop {t+1}/{n}   mean err {fields[t].mean():.3f}",
+        ax.set_title(f"{title}   loop {t+1}/{n}   unsettled {fields[t].mean():.2f}",
                      fontsize=8, loc="left", color=INK)
         fig.patch.set_facecolor(VOID); ax.set_facecolor(VOID)
         fig.subplots_adjust(left=0.02, right=0.98, top=0.94, bottom=0.02)
         fig.savefig(tmp / f"f{t:04d}.png", facecolor=VOID)
         plt.close(fig)
-    # hold the last frame so the crystallized state lingers
+    # palindromic loop: crystallize (0..n-1), dissolve (n-2..1), hold start briefly
+    # so the video reads as an endless weather system instead of ending dark.
     import shutil
+    seq = list(range(n)) + list(range(n - 2, 0, -1))
+    for i, t in enumerate(seq):
+        if i < n:
+            continue  # frames 0..n-1 already written
+        shutil.copy(tmp / f"f{t:04d}.png", tmp / f"f{i:04d}.png")
     for i in range(fps * 2):
-        shutil.copy(tmp / f"f{n-1:04d}.png", tmp / f"f{n+i:04d}.png")
+        shutil.copy(tmp / "f0000.png", tmp / f"f{len(seq)+i:04d}.png")
     import subprocess
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps),
-                    "-i", str(tmp / "f%04d.png"), "-c:v", "libx264",
-                    "-pix_fmt", "yuv420p", "-crf", "18", str(out_mp4)], check=True)
+                    "-start_number", "0", "-i", str(tmp / "f%04d.png"),
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p",
+                    "-crf", "18", str(out_mp4)], check=True)
     print("wrote", out_mp4)
 
 
