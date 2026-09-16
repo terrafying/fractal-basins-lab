@@ -50,8 +50,14 @@ def main():
         for seed in SEEDS:
             out_npz = pdir / f"fprm_slice_seed{seed}.npz"
             if out_npz.exists():
-                print(f"[skip] {out_npz.name} exists", flush=True)
-                continue
+                try:
+                    d0 = np.load(out_npz)
+                    if int(d0["res"]) == RES and str(d0["puzzle"]) == puzzle:
+                        print(f"[skip] {out_npz.name} exists (res match)", flush=True)
+                        continue
+                    print(f"[stale] {out_npz.name} (res/puzzle mismatch) - recomputing", flush=True)
+                except (KeyError, ValueError):
+                    print(f"[stale] {out_npz.name} (old format) - recomputing", flush=True)
             t0 = time.time()
             u, v = plane((97, 512), seed)   # identical planes to exp01/eqr
             z0 = mesh(RES)
