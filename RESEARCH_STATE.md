@@ -60,3 +60,22 @@ All measurement is local GPU (MPS, free). Frontier (Astra) reserved for novelty 
   protocol A.
 - Pending: 200^2 FPRM run (mini, after 200^2 EqR set) -> settling-Wada at paper
   resolution; natural-prompt reachability experiment.
+
+## CORRECTION 2026-09-16 (major): frac_true_solved was a metric artifact
+parse_puzzle returns the GIVENS (with zeros), not the solution. All
+frac_true_solved=0 figures compared finals against the puzzle-with-zeros.
+Retracted. Recomputed with a real solver (all 3 puzzles verified UNIQUE):
+- EqR 200^2 hard_a seeds 0,1,2: frac_TRUE_solved = 1.000 (all 40k starts correct)
+- EqR 128^2 easy_a seeds 0,1: 0.524/0.537 (easy_a is classically HARD, 1778
+  guesses -> reliability does NOT track classical difficulty)
+- EqR easy_b (trivial): 1.000
+- FPRM 64^2: easy_a 0.454, easy_b 0.500, hard_a 0.435 == modal-basin share
+  (the atlas modal basin IS the true solution; the other ~1489 basins are wrong)
+Revised picture: EqR = single correct attractor, fractal temporal boundaries,
+100% correct. FPRM = correct dominant attractor + ~1489 wrong-answer basins,
+43-50% correct. Native init lands in the modal basin (exp11) -> the atlas is
+functional and centered on truth. GLM-5.3's peripheral-regime objection
+dissolves. exp11 JSON + exp01 summary frac_true_solved fields carry the old
+artifact; recompute from finals arrays (all stored).
+- Open question: why is EqR 100% on hard_a but 53% on easy_a? (training
+  distribution? constraint structure?)
