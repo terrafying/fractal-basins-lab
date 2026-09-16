@@ -39,3 +39,24 @@ All measurement is local GPU (MPS, free). Frontier (Astra) reserved for novelty 
 ## Claims discipline
 - EqR "solved" in our summaries = frac_consensus (model self-consistency, the paper's exclusion rule), NOT ground truth. frac_true_solved recorded separately (0.0 on hard_a for BOTH models' injected slices — neither model reaches the true solution from random latents on this puzzle; interesting in itself).
 - easy_a label is misleading (1778 backtracking guesses — it's hard). Only easy_b (0 guesses) is a true easy control.
+
+## UPDATE 2026-09-16 (post expert fan-out)
+- Wada retraction: the 98.1% answer-identity Wada figure is a FRAGMENTATION ARTIFACT
+  (1992 classes / 4096 px -> any arrangement gives ~99%; patch-permutation null =
+  observed exactly). DeepSeek v4-pro null analysis predicted this. Claim withdrawn.
+- SURVIVING result: settling-tertile map (fast/mid/slow) shows REAL interlocking:
+  q(r=1,k=3) = 0.348 vs patch-permutation null 0.155 +- 0.031 (~6 sigma). The
+  Wada-like structure lives in the TEMPORAL geometry (settling basins), not
+  answer-identity geometry. Consistent with source paper (their maps were
+  settling-time maps).
+- GLM-5.3 philosophy attack (runs/reviews/glm-5.3.md): basin-selection is trivial
+  for deterministic maps unless basins are representational; frac_true_solved=0 and
+  paraphrase instability cut against the strong reading; light-cone identification
+  is a category error (goal-horizon vs outcome-coincidence); ingression is
+  Whitehead's term. Defusing experiments: natural-prompt reachability of injected
+  basins; atlas novelty test.
+- Nemotron novelty ratings (VERIFY CITATIONS - likely partly hallucinated):
+  Wada-in-answer-space S (now retracted!), Levin operationalization A, FLI
+  protocol A.
+- Pending: 200^2 FPRM run (mini, after 200^2 EqR set) -> settling-Wada at paper
+  resolution; natural-prompt reachability experiment.
