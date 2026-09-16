@@ -32,49 +32,95 @@ def settling_from_traces(tr):
     return tr.shape[1] - conv.sum(1)
 
 
-def early_exit_solve(solver, puzzle, z0, cap=24, chunk=8, batch=512):
+def early_exit_solve(solver, puzzle, z0, cap=24, chunk=8, batch=512,
+                     progress_path=None):
     """Chunked solving with latent-carry continuation + early exit.
 
     Verified exactly equivalent to a continuous cap-loop run (exp03: settling
     100%, final grids 100%, on EqR sudoku hard_a). Returns per-condition
     settling times and final grids.
+
+    Resumable: with progress_path set, per-chunk state (carries, alive set,
+    accumulated decoded grids) is saved after every chunk and reloaded on a
+    later call matching the same puzzle+z0 fingerprint. A killed job loses at
+    most one chunk; the state file is a plain portable npz.
     """
+    import hashlib
     N = z0.shape[0]
+    fp = hashlib.sha1()
+    fp.update(puzzle.encode())
+    fp.update(z0.numpy().tobytes())
+    fingerprint = fp.hexdigest()[:16]
+
     settling = np.empty(N, dtype=np.int16)
     finals = np.zeros((N, 9, 9), dtype=np.int8)
-    for lo in range(0, N, batch):
-        hi = min(lo + batch, N)
-        zB = z0[lo:hi]
-        n = hi - lo
-        carry_H, carry_L = zB.clone(), zB * 0
-        alive = np.arange(n)
-        pieces = {k: [] for k in range(n)}
-        start = 0
-        while alive.size and start < cap:
-            steps = min(chunk, cap - start)
-            r = solver.solve_batch(puzzle, z_H=carry_H, z_L=carry_L, max_steps=steps,
-                                   noise_scale=0.0, return_intermediates=True,
-                                   return_latents=True)
-            tr = to_traces(r).numpy()
-            for k, i in enumerate(alive):
-                pieces[i].append(tr[k])
-            stable = ((tr[:, -1] == tr[:, -2]).all(-1).all(-1)
-                      if steps > 1 else np.zeros(len(alive), bool))
-            keep = ~stable
-            hist_H = r.extra["z_H_history"]
-            hist_L = r.extra["z_L_history"]
-            if isinstance(hist_H, list):
-                hist_H = torch.stack(hist_H)
-                hist_L = torch.stack(hist_L)
-            carry_H = hist_H[-1][torch.tensor(keep)].clone()
-            carry_L = hist_L[-1][torch.tensor(keep)].clone()
-            alive = alive[keep]
-            start += steps
-        for i in range(n):
-            g = np.concatenate(pieces[i], axis=0)
-            conv = (g == g[-1:]).all(-1).all(-1)
-            settling[lo + i] = len(g) - int(conv.sum())
-            finals[lo + i] = g[-1]
+    start = 0
+    alive = np.arange(N)
+    carry_H, carry_L = z0.clone(), z0 * 0
+    pieces = {k: [] for k in range(N)}
+    resumed = False
+
+    if progress_path and Path(progress_path).exists():
+        try:
+            st = np.load(progress_path, allow_pickle=True)
+            if str(st["fingerprint"]) == fingerprint and int(st["cap"]) == cap:
+                settling = st["settling"]
+                finals = st["finals"]
+                start = int(st["start"])
+                alive = st["alive"]
+                carry_H = torch.from_numpy(st["carry_H"])
+                carry_L = torch.from_numpy(st["carry_L"])
+                grids = st["pieces"]  # (alive_n, loops_so_far, 9, 9) int8
+                for k, i in enumerate(alive):
+                    pieces[i] = [g for g in grids[k]]
+                resumed = True
+                print(f"[resume] {Path(progress_path).name} at loop {start}/"
+                      f"{cap}, {len(alive)} alive", flush=True)
+        except (KeyError, ValueError) as e:
+            print(f"[progress-stale] {e} - starting fresh", flush=True)
+    if progress_path and not resumed:
+        Path(progress_path).unlink(missing_ok=True)
+
+    total_loops = 0
+    while alive.size and start < cap:
+        steps = min(chunk, cap - start)
+        r = solver.solve_batch(puzzle, z_H=carry_H, z_L=carry_L, max_steps=steps,
+                               noise_scale=0.0, return_intermediates=True,
+                               return_latents=True)
+        tr = to_traces(r).numpy()
+        total_loops += alive.size * steps
+        for k, i in enumerate(alive):
+            pieces[i].append(tr[k])
+        stable = ((tr[:, -1] == tr[:, -2]).all(-1).all(-1)
+                  if steps > 1 else np.zeros(len(alive), bool))
+        keep = ~stable
+        hist_H = r.extra["z_H_history"]
+        hist_L = r.extra["z_L_history"]
+        if isinstance(hist_H, list):
+            hist_H = torch.stack(hist_H)
+            hist_L = torch.stack(hist_L)
+        carry_H = hist_H[-1][torch.tensor(keep)].clone()
+        carry_L = hist_L[-1][torch.tensor(keep)].clone()
+        alive = alive[keep]
+        start += steps
+        if progress_path:
+            alive_grids = (np.stack([np.concatenate(pieces[i], axis=0)
+                                     for i in alive]) if alive.size else
+                           np.zeros((0, 0, 9, 9), dtype=np.int8))
+            np.savez_compressed(progress_path,
+                                fingerprint=fingerprint, cap=cap, start=start,
+                                alive=alive, carry_H=carry_H.numpy(),
+                                carry_L=carry_L.numpy(), settling=settling,
+                                finals=finals, pieces=alive_grids.astype(np.int8))
+
+    for i in range(N):
+        g = np.concatenate(pieces[i], axis=0) if pieces[i] else \
+            np.zeros((1, 9, 9), dtype=np.int8)
+        conv = (g == g[-1:]).all(-1).all(-1)
+        settling[i] = len(g) - int(conv.sum())
+        finals[i] = g[-1]
+    if progress_path:
+        Path(progress_path).unlink(missing_ok=True)  # complete: state not needed
     return settling, finals
 
 

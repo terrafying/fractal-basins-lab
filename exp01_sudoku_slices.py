@@ -31,12 +31,23 @@ SEEDS = [int(s) for s in __import__("os").environ.get("FB_SEEDS", "0,1,2").split
 ONLY = set(filter(None, __import__("os").environ.get("FB_PUZZLES", "").split(",")))
 MAX_STEPS = 24
 
-# Two puzzles with a difficulty gap (both solvable; verified via tdoku-free
-# MRV backtracking: easy_a has 0 guesses, hard_a requires deep backtracking).
+# Two puzzles. NOTE (2026-09-15): the original comment claimed easy_a=0
+# backtracking guesses - stale/wrong for the strings below. Measured via the
+# MRV backtracking counter in this file: easy_a=1778 guesses, hard_a=951.
+# Both are classically hard; do NOT treat the easy/hard labels as a difficulty
+# axis. easy_b is a generated singles-solvable control (0 guesses) - see
+# scripts/gen_easy_control.py. The axis for analysis is backtracking_guesses,
+# recorded per puzzle in summary.json.
 PUZZLES = {
     "easy_a": "..4.6...16..3...8.....24.....9..2..4.5.......4...3.26.....8...........172....384.",
     "hard_a": ".....6.....7.3.4..5..8.....9.8.7.3...1.....9...498.7....2....4387....2......2....",
+    "easy_b": None,  # filled at import by scripts/gen_easy_control.py output if present
 }
+_easy_b_file = Path(__file__).resolve().parent / "runs" / "easy_b_puzzle.txt"
+if _easy_b_file.exists():
+    PUZZLES["easy_b"] = _easy_b_file.read_text().strip()
+else:
+    PUZZLES.pop("easy_b")
 
 
 def plane(shape, seed):
@@ -96,6 +107,25 @@ def backtracking_guesses(grid):
     return guesses if solve() else -1
 
 
+def merge_summary(summary):
+    """Cumulative merge: keep records from other invocations (keyed on
+    puzzle+seed+res). Last value wins within a key so reruns update in place
+    instead of clobbering."""
+    path = OUT / "summary.json"
+    if path.exists():
+        try:
+            old = json.loads(path.read_text())
+            for pid, recs in old.get("puzzles", {}).items():
+                bucket = summary["puzzles"].setdefault(pid, [])
+                proto_res = old.get("protocol", {}).get("res")
+                seen = {(r["seed"], r.get("res", proto_res)) for r in bucket}
+                bucket.extend(r for r in recs
+                              if (r.get("seed"), r.get("res", proto_res)) not in seen)
+        except (json.JSONDecodeError, KeyError, TypeError):
+            pass  # unreadable/corrupt previous summary: start fresh
+    (OUT / "summary.json").write_text(json.dumps(summary, indent=2))
+
+
 def main():
     device = ("cuda" if torch.cuda.is_available()
               else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -117,8 +147,40 @@ def main():
         for seed in SEEDS:
             out_npz = pdir / f"slice_seed{seed}.npz"
             if out_npz.exists():
-                print(f"[skip] {out_npz.name} exists", flush=True)
-                continue
+                # Self-describing artifacts: reuse stored slice if puzzle+res
+                # match, and rebuild summary metrics from the arrays (no
+                # recompute). Old-format files (pre-finals/res) and canary
+                # artifacts fall through and get recomputed.
+                try:
+                    d = np.load(out_npz, allow_pickle=True)
+                    if str(d["puzzle"]) == puzzle and int(d["res"]) == RES:
+                        times = d["settling"]
+                        finals_np = d["finals"]
+                        solved = int((finals_np == grid).all(-1).all(-1).sum())
+                        frac_true_solved = solved / RES**2
+                        vals, counts = np.unique(finals_np.reshape(RES**2, -1), axis=0,
+                                                 return_counts=True)
+                        frac_solved = counts.max() / RES**2
+                        frac_capped = float((times == MAX_STEPS).mean())
+                        be = basin_entropy(times, box_size=5)
+                        ue = uncertainty_exponent(times, box_size=5)
+                        rec = dict(seed=seed, res=RES, mean_settling=float(times.mean()),
+                                   basin_entropy=be["basin_entropy"],
+                                   boundary_entropy=be.get("boundary_basin_entropy"),
+                                   alpha=ue["uncertainty_exponent"],
+                                   frac_consensus=frac_solved,
+                                   frac_true_solved=frac_true_solved,
+                                   frac_capped=frac_capped,
+                                   valid_slice=bool(frac_solved >= 0.90 and frac_capped <= 0.01),
+                                   backtracking_guesses=diff,
+                                   givens=int((grid > 0).sum()), seconds=0.0)
+                        print(f"[reuse] {out_npz.name} (puzzle+res match)")
+                        print(json.dumps(rec), flush=True)
+                        summary["puzzles"].setdefault(pid, []).append(rec)
+                        continue
+                    print(f"[stale] {out_npz.name} (puzzle/res mismatch) - recomputing", flush=True)
+                except (KeyError, ValueError) as e:
+                    print(f"[stale] {out_npz.name} (old format: {e}) - recomputing", flush=True)
             t0 = time.time()
             u, v = plane((97, 512), seed)
             z_all = mesh(RES)
@@ -133,7 +195,9 @@ def main():
                 finals_np = traces[:, -1].numpy()
             else:
                 from exp03_earlyexit import early_exit_solve
-                times_1d, finals_np = early_exit_solve(solver, puzzle, z_all, cap=MAX_STEPS)
+                times_1d, finals_np = early_exit_solve(
+                    solver, puzzle, z_all, cap=MAX_STEPS,
+                    progress_path=pdir / f".progress_seed{seed}.npz")
                 times = times_1d.reshape(RES, RES)
 
             solved = int((finals_np == grid).all(-1).all(-1).sum())
@@ -150,8 +214,10 @@ def main():
             ue = uncertainty_exponent(times, box_size=5)
             valid = frac_solved >= 0.90 and frac_capped <= 0.01
             np.savez_compressed(pdir / f"slice_seed{seed}.npz",
-                                settling=times, seed=seed, puzzle=puzzle)
-            rec = dict(seed=seed, mean_settling=float(times.mean()),
+                                settling=times, finals=finals_np, res=RES,
+                                seed=seed, puzzle=puzzle,
+                                backtracking_guesses=diff)
+            rec = dict(seed=seed, res=RES, mean_settling=float(times.mean()),
                        basin_entropy=be["basin_entropy"],
                        boundary_entropy=be.get("boundary_basin_entropy"),
                        alpha=ue["uncertainty_exponent"],
@@ -163,7 +229,7 @@ def main():
             print(json.dumps(rec), flush=True)
             summary["puzzles"].setdefault(pid, []).append(rec)
 
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2))
+    merge_summary(summary)
     print("\nwrote", OUT / "summary.json")
 
 
