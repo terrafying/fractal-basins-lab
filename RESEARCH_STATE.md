@@ -79,3 +79,10 @@ dissolves. exp11 JSON + exp01 summary frac_true_solved fields carry the old
 artifact; recompute from finals arrays (all stored).
 - Open question: why is EqR 100% on hard_a but 53% on easy_a? (training
   distribution? constraint structure?)
+
+## UPDATE 2026-09-17: settling interlocking confirmed at paper resolution
+200^2 FPRM hard_a seed 0 (40k conds, mini, 21.5h): alpha 0.046, Sb 1.61,
+frac_consensus 0.435 = frac_TRUE_solved 0.4354 (modal basin = truth).
+Settling-tertile interlocking: q(r=1,k=3) = 0.2385 vs patch-permutation null
+0.0911 +- 0.0173, z = 8.5. Settling tertile cuts [87, 199] -> slow third is
+cap-saturated. Figure: runs/exp04/hard_a/settling_200.png.
