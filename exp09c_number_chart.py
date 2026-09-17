@@ -93,7 +93,7 @@ def main():
             print(f"[{i+1}/{len(pts)}] ({a:+.1f},{b:+.1f}) -> "
                   f"{results[-1]['answer']} ({time.time()-t0:.0f}s)", flush=True)
     handle.remove()
-    (OUT / "number_chart.json").write_text(json.dumps(results, indent=1))
+    (OUT / f"number_chart_L{LAYER}.json").write_text(json.dumps(results, indent=1))
 
     # ---- analysis + figure ----
     import matplotlib
@@ -128,9 +128,9 @@ def main():
         ax.set_facecolor("#050508"); ax.set_xticks([]); ax.set_yticks([])
         for s in ax.spines.values():
             s.set_color("#1c2430")
-    fig.savefig(OUT / "number_manifold_chart.png", facecolor="#050508",
+    fig.savefig(OUT / f"number_manifold_chart_L{LAYER}.png", facecolor="#050508",
                 bbox_inches="tight")
-    print("wrote", OUT / "number_manifold_chart.png")
+    print("wrote", OUT / f"number_manifold_chart_L{LAYER}.png")
 
 
 if __name__ == "__main__":
