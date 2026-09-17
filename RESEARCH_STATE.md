@@ -86,3 +86,18 @@ frac_consensus 0.435 = frac_TRUE_solved 0.4354 (modal basin = truth).
 Settling-tertile interlocking: q(r=1,k=3) = 0.2385 vs patch-permutation null
 0.0911 +- 0.0173, z = 8.5. Settling tertile cuts [87, 199] -> slow third is
 cap-saturated. Figure: runs/exp04/hard_a/settling_200.png.
+
+## UPDATE 2026-09-17 (later): guidance + boundary tracing status
+DeepSeek v4-pro guidance (runs/reviews/deepseek_guidance.md): ranking
+(b) boundary-tracing walks > (d) local Jacobian/dynamical response >
+(a) 3D reconstruction > (c) cross-model comparison. Boundary tracing converts
+the static atlas into a road network; design: bisection oracle + tangent
+predictor-corrector, junction statistics, boundary-vs-settling-ridge alignment.
+NEW finding: FPRM "deterministic" map is only deterministic up to float
+reduction order — live oracle vs 200^2 map agrees ~70% (batch-size sensitive
+borderline starts). Boundary tracing must run map-only (exp15 needs rewrite).
+exp13: error atlas is a smooth semantic manifold (adjacent-basin Hamming 17.2
+vs random 30.0; 0.9% near-identical adjacent pairs vs 0% random).
+exp12 (multi-slice stitch, 6 orientations): spine/fan/3D figures in runs/exp12.
+exp09d: depth stack + adjacency graphs — manifold morphs gradient(L8) ->
+provinces(L20) -> faulted(L26); 65 is the adjacency hub at all depths.
