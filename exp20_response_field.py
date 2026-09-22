@@ -34,7 +34,8 @@ RES = 32
 LAYER = int(os.environ.get("FB_LAYER", "14"))
 SCALE = float(os.environ.get("FB_SCALE", "3.0"))
 MAX_NEW = 48
-PROMPT = "Tell me about the city of Paris."
+PROMPT = os.environ.get("FB_PROMPT", "Tell me about the city of Paris.")
+TAG = os.environ.get("FB_TAG", "paris")
 
 TOPICS = {  # keyword -> topic name
     "eiffel": "Eiffel / landmarks",
@@ -121,7 +122,7 @@ for i, a in enumerate(lin.tolist()):
     if (i + 1) % 8 == 0:
         print(f"row {i+1}/{RES} ({time.time()-t0:.0f}s)", flush=True)
 handle.remove()
-json.dump(results, open(OUT / "response_field.json", "w"), indent=1)
+json.dump(results, open(OUT / f"response_field_{TAG}.json", "w"), indent=1)
 
 # topic map
 topics = list({r["topic"] for r in results})
@@ -157,7 +158,7 @@ for ax in axes:
     ax.set_facecolor("#050508"); ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
         s.set_color("#1c2430")
-fig.savefig(OUT / "response_field_map.png", facecolor="#050508",
+fig.savefig(OUT / f"response_field_map_{TAG}.png", facecolor="#050508",
             bbox_inches="tight")
-print("wrote", OUT / "response_field_map.png")
+print("wrote", OUT / f"response_field_map_{TAG}.png")
 print("topic distribution:", Counter(r["topic"] for r in results).most_common())
