@@ -101,3 +101,39 @@ vs random 30.0; 0.9% near-identical adjacent pairs vs 0% random).
 exp12 (multi-slice stitch, 6 orientations): spine/fan/3D figures in runs/exp12.
 exp09d: depth stack + adjacency graphs — manifold morphs gradient(L8) ->
 provinces(L20) -> faulted(L26); 65 is the adjacency hub at all depths.
+
+## DIRECTION CHANGE 2026-09-21 (title + focus)
+Retitled: the program is now "the geometric structure of meaning in ordinary
+LLMs, observed live on real language." EqR/FPRM are demoted to reference
+instruments (their basin physics validated the toolkit; no further basin
+hunting there). Note: the old frac_true_solved=0 note in Claims discipline
+below is superseded — it was a parse_puzzle artifact; all three puzzles are
+uniquely solvable and EqR 200^2 hard_a is 100% TRUE-correct.
+
+Current primary line (ordinary LLM, Qwen3-1.7B + Qwen3.6 family):
+- exp16/16c: belief lanes — real claims' information transformation through
+  depth, readable via norm-matched logit lens. True claims crystallize
+  mid-depth; false claims stall at the final layer; nonsense persists
+  lexically ("Colorless green ideas sleep fur(iously)" at 0.83).
+- exp09c/09d/09e/09f: number-manifold charts via digit-PCA/helix steering
+  (kept as a calibration task — the only semantic space with known geometry).
+- exp13: adjacent error regions are semantically close (Hamming 17.2 vs 30
+  random) — semantic smoothness of the atlas.
+- NEW INSTRUMENT: Exemplar Partitioning (Rumbelow 2026, arXiv:2605.14347,
+  github jessicarumbelow/exemplar-partitioning, MIT, pip-installable) —
+  unsupervised Voronoi partition of activation space, observed exemplar
+  anchors, dictionaries comparable across models/checkpoints. Integration:
+  build EP dictionaries over ordinary-LLM activations on real text, label
+  regions semantically, track region flow across layers; use exemplar
+  steering/ablation for causal tests; EP correspondence metric for
+  cross-model semantic-geometry comparison. This replaces the EqR/FPRM
+  isomorphism plan.
+
+Open questions (ordinary-LLM line):
+1. Belief-lane crystallization depth: at which layer does the true/false
+   class split happen, and is it claim-independent? (exp16 lanes suggest a
+   late, class-dependent split.)
+2. EP dictionary of real-prompt activations -> do region assignments predict
+   answer identity/stability? (atlas-as-dictionary upgrade)
+3. The two-geometries dissociation: why is activation space orderly while
+   prompt space is chaotic? Measure the map language->atlas directly.

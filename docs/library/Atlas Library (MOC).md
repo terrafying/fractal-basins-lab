@@ -29,6 +29,9 @@ RESEARCH_STATE.md there). This folder holds the reading + concept layer.
 - [[Concept - cognitive light cone]]
 - [[Concept - ingression (Whitehead via Levin)]]
 
+## Interpretability machinery
+- [[Paper - Exemplar Partitioning (Rumbelow 2026)]]
+
 ## Ordinary LLMs — semantic geometry
 - [[Paper - Language models use trigonometry to do addition (Kantamneni 2025)]]
 - [[Paper - Universal representations of numbers (2025)]]
