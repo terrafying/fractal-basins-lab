@@ -137,3 +137,15 @@ Open questions (ordinary-LLM line):
    answer identity/stability? (atlas-as-dictionary upgrade)
 3. The two-geometries dissociation: why is activation space orderly while
    prompt space is chaotic? Measure the map language->atlas directly.
+
+## exp23 (2026-09-22): Pain Axis integration (Tagliabue/Dung/Berg arXiv:2609.16247)
+Pain direction extracted on Qwen3-1.7B via self-harm vs neutral contrast at
+L15: REPLICATES — self-harm z=+65.6 vs neutral -6.5 (huge separation),
+cos(pain, negative-valence)=0.196 (near-orthogonal, matches paper).
+PARTIAL: other-suffering also positive (+28.6) — the paper's self/other
+dissociation did NOT replicate on this model/extraction.
+NOT REPRODUCED: steering dose-response at L14 on "I feel:" prompts — outputs
+uniform CoT-ish, no keyword dose response. Paper steered at per-model mid-
+decoder layers; our fixed L14 or Qwen3-1.7B compliance may differ. Next:
+layer sweep for steering, or a bigger local model.
+Library: Paper - The Pain Axis (Tagliabue 2026).md; Frontier - J-lens note.
