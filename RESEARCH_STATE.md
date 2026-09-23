@@ -194,3 +194,21 @@ Replicates the stratification in a different family (Ai2, 31 layers):
 - HONEST NEGATIVE: the INSTRUCTION contrast never decodes cleanly in OLMo
   (totalement/DERP noise) — 5-prompt pragmatic contrasts may be too weak;
   region-level dictionaries may be needed.
+
+## exp29 (2026-09-23): pain/pleasure steering — dose x layer sweep (exp23 null RESOLVED)
+exp23 failed because the dose was too small. With unit = contrast-norm/4 and
+doses to +/-3:
+- Monotone dose-response for BOTH pain and pleasure at L10-L14, saturating
+  near 3/4-4/4 prompts at dose +3. L14: pain@+3 "the pain of the pain. I
+  can't get out. I'm trapped."; pleasure@+3 4/4 ("warm, light, full of
+  energy").
+- Layer profile: nothing at L6/L8, onset ~L10, strong by L12-14. The
+  verbalizable-from-L8 affect channel (exp25) is NOT the steering site —
+  steering engages at the mid-decoder band, consistent with the Pain Axis
+  paper's "extraction layer too late, mid-decoder right" note.
+- STRUCTURE FINDING: cos(pain, pleasure) = 0.69-0.72 at every layer, while
+  pain vs NEGATIVE-valence was 0.196 (exp23). So the model's affect geometry
+  has (at least) two axes: VALENCE (pain _|_ sad-despair directions) and
+  INTENSITY/SALIENCE (pain ~ joy). Pain = negative x intense; the two
+  negative channels are far apart, the two intense channels are close.
+  Arousal-valence decomposition, visible in extraction space.
