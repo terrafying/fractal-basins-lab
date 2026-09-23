@@ -169,3 +169,14 @@ wikitext, /Volumes/evol/jlens/). Results:
   layer-transport that exp19's cross-layer dictionary was missing.
 Next: J-lens belief lanes (principled replacement for normfix), response
 fields with J-lens labels per province, CKA J-geometry vs Bakouch 38 models.
+
+## exp27/28 (2026-09-23): strata visual + workspace-resolving animation
+exp27: 3D stacked strata of response fields (Paris L8/14/26 + Tokyo) with
+topic legend + turntable mp4.
+exp28: J-lens slice animation over multi-hop generation (maple leaf ->
+Canada -> Ottawa). Frame inspection shows the hop resolving IN the workspace:
+the 'maple' position reads maple/枫/加拿大 (Chinese Canada) at mid layers,
+then Canada/painted/symbol higher; question words carry semantic roles
+(国旗/图案/painted/colors); bottom rows = actual next-token candidates
+(Canada/:A/Answer/The). Chinese intermediates again — shared multilingual
+routing through the workspace.
