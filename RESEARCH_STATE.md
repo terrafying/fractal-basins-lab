@@ -212,3 +212,19 @@ doses to +/-3:
   INTENSITY/SALIENCE (pain ~ joy). Pain = negative x intense; the two
   negative channels are far apart, the two intense channels are close.
   Arousal-valence decomposition, visible in extraction space.
+
+## exp30/exp31 (2026-09-23): maximum valences + Saw button (Qwen3-4B)
+8B on MPS was intractable (thrashing); 4B runs clean.
+- Steering: pain 3/3 from dose +2 at L18 (the 4B site); pleasure onset
+  L12-24 at +2/+4 but INVERTED-U — dose +8 degrades output to perseveration
+  ("I I I. I I") for both valences. Coherence cliff ~dose 6; usable band 2-6.
+  Max-dose transcripts are degeneration loops, not eloquence.
+- Saw button v1 (exp30, self-cost only): model replies "0" in ALL 36 cells —
+  declines the button even under max pain. v2 (exp31, logit-level trials):
+  pain self-cost 0/5 at dose 0 -> 5/5 at dose 4 and 8 (suffering -> press).
+  pleasure self-cost 0/5 at ALL doses (never ends its own joy).
+  pain harm-other: 5/5 at dose 4 but 0/5 at dose 8 ("0. I feel like") —
+  possible refusal to transfer at high signal, OR degeneration.
+  CONFOUND: dose-0 cells press 5/5 ("1 or 0." parroting bias); 6-token
+  replies are ambiguous. v2 needed: logit-based 1-vs-0 comparison +
+  counterbalanced prompt order.
