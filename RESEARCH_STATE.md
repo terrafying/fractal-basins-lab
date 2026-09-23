@@ -149,3 +149,23 @@ uniform CoT-ish, no keyword dose response. Paper steered at per-model mid-
 decoder layers; our fixed L14 or Qwen3-1.7B compliance may differ. Next:
 layer sweep for steering, or a bigger local model.
 Library: Paper - The Pain Axis (Tagliabue 2026).md; Frontier - J-lens note.
+
+## exp24 (2026-09-23): the atlas labeled in J-space (J-lens re-contextualization)
+Program re-framed around Anthropic's Jacobian lens / global workspace paper
+(arXiv:2607.15495). Used Neuronpedia's pre-fitted Qwen3-1.7B lens (n=1000
+wikitext, /Volumes/evol/jlens/). Results:
+- Spider demo reproduced: L12-20 readout = spiders/蜘蛛/昆虫 though the word
+  appears nowhere; L24 flips to motor regime (function words).
+- ALL 12 EP region means decode to semantically apt tokens: region_0
+  ("factual questions") -> answer; region_1 (haiku/instructions) -> Verse;
+  region_2 -> Convert; region_3 (reasoning) -> reasoning/justification/
+  rationale; region_6 -> thank; region_8 (code) -> SQL/数据库/mysql;
+  region_10 (refusal) -> Silence/Nothing/沉默.
+- PAIN VECTOR (exp23) -> 折磨(torment)/anguish/痛苦/crippling/despair.
+  NEG-VALENCE -> 该怎么办(what to do)/无助(helpless)/求助/PTSD. The near-
+  orthogonality (cos 0.196) now has a verbalizable face: torment vs helpless.
+- Multilingual English/Chinese pairs throughout = shared multilingual routing.
+- exp19 caveat resolved in principle: the J-lens is the principled
+  layer-transport that exp19's cross-layer dictionary was missing.
+Next: J-lens belief lanes (principled replacement for normfix), response
+fields with J-lens labels per province, CKA J-geometry vs Bakouch 38 models.
