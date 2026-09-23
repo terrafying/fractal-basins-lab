@@ -180,3 +180,17 @@ then Canada/painted/symbol higher; question words carry semantic roles
 (国旗/图案/painted/colors); bottom rows = actual next-token candidates
 (Canada/:A/Answer/The). Chinese intermediates again — shared multilingual
 routing through the workspace.
+
+## exp26 (2026-09-23): cross-family J-space trajectories (OLMo-3-7B)
+Replicates the stratification in a different family (Ai2, 31 layers):
+- PAIN verbalizes from ~L16/31 (debilitating/egregious/crippling -> ache/
+  wounds/bruises at L30) — mid-depth onset, somatic vocabulary, persistent.
+  Same as Qwen (L8/27, anguish/torment). "Debilitating/crippling" in BOTH
+  families.
+- VALENCE later and distinct: despair/grieving/mourning/funeral (L20+).
+  Two channels never merge, as in Qwen.
+- QUESTION verbalizes late only (L18+: Answers/Answer/Explain/What/Hint) —
+  matches Qwen's L20 pragmatic onset. Stratification claim replicates.
+- HONEST NEGATIVE: the INSTRUCTION contrast never decodes cleanly in OLMo
+  (totalement/DERP noise) — 5-prompt pragmatic contrasts may be too weak;
+  region-level dictionaries may be needed.
